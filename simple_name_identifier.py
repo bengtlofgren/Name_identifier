@@ -78,6 +78,10 @@ def label_encoding(gender_series):
 def predict_unsure(row, col_name, model):
     if row[f'{col_name}_is_male'] == 0:
         name = row[col_name].split(' ')[0]
+        
+        # Some name fields will have name 'expired' in which we don't want to predict anything
+        if name.lower() == 'expired':
+            return name
         encoded_name = np.asarray([name_encoding(normalize(name))])
         prediction = model.predict(encoded_name)[0]
         return 1 if prediction[0] > prediction[1] else -1
@@ -120,7 +124,7 @@ def irecommend_df(csv_file_path : str, col_names : list , sensitive_columns : li
 # test_df = pd.DataFrame(boy_names, columns = ['names'])
 # additional_names = pd.DataFrame(['fabian', 'jakob', 'marie', 'faraan', 'emily', 'linus', 'abdul', 'georgina', 'thomas pickett', 
 # 'matthew', 'jamie', 'rasmus', 'freddy', 'frank', 'charlie', 'charli', 'charles', 'bengt',
-# 'amelia', 'george', 'kurt', 'ingvar', 'ann', 'elisabeth'], columns = ['names'])
+# 'amelia', 'george', 'kurt', 'ingvar', 'ann', 'elisabeth', 'Expired'], columns = ['names'])
 # test_df = test_df.append(additional_names)
 # test_df.to_csv('./test.csv')
 # asdf = irecommend_df('./test.csv', ['names'])
@@ -137,4 +141,4 @@ def irecommend_df(csv_file_path : str, col_names : list , sensitive_columns : li
 # 4. save_filepath is a filepath in which you want the file saved
 
 # E.g
-irecommend_df('./irecommend_sql.csv', ['givenname', 'referrer name'], ['email', 'phone', 'customerid'])
+irecommend_df('./irecommend_sql.csv', ['givenname', 'name'], ['email', 'phone', 'customerid', 'givenname', 'name'])
