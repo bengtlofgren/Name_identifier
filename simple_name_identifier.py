@@ -76,29 +76,31 @@ def label_encoding(gender_series):
     return labels
 
 def predict_unsure(row, col_name, model):
-    if row['is_male'] == 0:
+    if row[f'{col_name}_is_male'] == 0:
         name = row[col_name].split(' ')[0]
         encoded_name = np.asarray([name_encoding(normalize(name))])
-        prediction = model.predict(encoded_name)[0]        
+        prediction = model.predict(encoded_name)[0]
         return 1 if prediction[0] > prediction[1] else -1
     
     else:
-        return row['is_male']
+        return row[f'{col_name}_is_male']
 
 def predict_irecommend(df, col_name = 'names'):
     
     neural_network = keras.models.load_model("gender_identifier")
-    df['predicted_is_male'] = df.apply(predict_unsure, axis = 1, args = [col_name, neural_network])
+    df[f'{col_name}_predicted_is_male'] = df.apply(predict_unsure, axis = 1, args = [col_name, neural_network])
     return df
 
 
-def irecommend_df(csv_file_path : str, col_name : str , sensitive_columns : list = None, save_filepath = './bengts_data.csv'):
+def irecommend_df(csv_file_path : str, col_names : list , sensitive_columns : list = None, save_filepath = './bengts_data.csv'):
     
     df = pd.read_csv(csv_file_path)
-    df['is_male'] = df.apply(is_male, axis = 1, args = [col_name])
-    
-    if len(df[df['is_male'] == 0].index) > 0:
-        df = predict_irecommend(df, col_name)
+
+    for col_name in col_names:
+        df[f'{col_name}_is_male'] = df.apply(is_male, axis = 1, args = [col_name])
+
+        if len(df[df[f'{col_name}_is_male'] == 0].index) > 0:
+            df = predict_irecommend(df, col_name)
 
     # For Debugging:
     # Use df.info() in order to understand what the column names are 
@@ -116,10 +118,13 @@ def irecommend_df(csv_file_path : str, col_name : str , sensitive_columns : list
 
 # Testing
 # test_df = pd.DataFrame(boy_names, columns = ['names'])
-# additional_names = pd.DataFrame(['fabian', 'jakob', 'marie', 'faraan', 'emily', 'linus', 'abdul', 'georgina', 'thomas pickett'], columns = ['names'])
+# additional_names = pd.DataFrame(['fabian', 'jakob', 'marie', 'faraan', 'emily', 'linus', 'abdul', 'georgina', 'thomas pickett', 
+# 'matthew', 'jamie', 'rasmus', 'freddy', 'frank', 'charlie', 'charli', 'charles', 'bengt',
+# 'amelia', 'george', 'kurt', 'ingvar', 'ann', 'elisabeth'], columns = ['names'])
 # test_df = test_df.append(additional_names)
 # test_df.to_csv('./test.csv')
-# asdf = irecommend_df('./test.csv', 'names')
+# asdf = irecommend_df('./test.csv', ['names'])
+# asdf.to_csv('./test_answers.csv')
 # print(asdf.tail())
 
 # For fabian
@@ -132,4 +137,4 @@ def irecommend_df(csv_file_path : str, col_name : str , sensitive_columns : list
 # 4. save_filepath is a filepath in which you want the file saved
 
 # E.g
-# irecommend_df('./irecommend_sql.csv', 'namn', ['email', 'phone', 'customerid'])
+irecommend_df('./irecommend_sql.csv', ['givenname', 'referrer name'], ['email', 'phone', 'customerid'])
